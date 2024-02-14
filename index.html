@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Live Status Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .live-status {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Live Status Monitor</h1>
+    <input type="text" id="youtubeUrlInput" placeholder="Enter YouTube URL">
+    <button onclick="addLiveStatus()">Add Live Status</button>
+
+    <div id="liveStatusContainer"></div>
+
+    <script>
+        async function checkLiveStatus(youtubeUrl) {
+            const response = await fetch('http://localhost:8000/api/live/check-live-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ youtube_url: youtubeUrl })
+            });
+            const data = await response.json();
+            const liveStatus = data.live_status ? 'Live' : 'Not Live';
+            return liveStatus;
+        }
+
+        async function addLiveStatus() {
+            const youtubeUrl = document.getElementById('youtubeUrlInput').value;
+            const liveStatus = await checkLiveStatus(youtubeUrl);
+            const liveStatusContainer = document.getElementById('liveStatusContainer');
+            const newLiveStatusDiv = document.createElement('div');
+            newLiveStatusDiv.classList.add('live-status');
+            newLiveStatusDiv.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
+            liveStatusContainer.appendChild(newLiveStatusDiv);
+        }
+
+
+        setInterval(() => {
+            const liveStatusDivs = document.querySelectorAll('.live-status');
+            liveStatusDivs.forEach(async (div) => {
+                const youtubeUrl = div.innerText.split(' - ')[0].split(': ')[1];
+                const liveStatus = await checkLiveStatus(youtubeUrl);
+                div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
+            });
+        }, 5 * 60 * 1000); // 5分鐘刷新一次
+    </script>
+</body>
+</html>
