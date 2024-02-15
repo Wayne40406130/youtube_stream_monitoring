@@ -11,6 +11,25 @@
         .live-status {
             margin-bottom: 10px;
         }
+        .live-status-container {
+            display: flex;
+            align-items: center;
+        }
+        .live-status-success {
+            color: green;
+        }
+        .live-status-fail {
+            color: red;
+            font-weight: bold;
+        }
+        .remove-url-button {
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .error-message {
+            color: red;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -22,37 +41,102 @@
 
     <script>
         async function checkLiveStatus(youtubeUrl) {
-            const response = await fetch('http://localhost:8000/api/live/check-live-status/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ youtube_url: youtubeUrl })
+            try {
+                const response = await fetch('http://localhost:8000/api/live/check-live-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ youtube_url: youtubeUrl })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail); // 抛出详细错误信息
+                }
+                const liveStatus = data.live_status ? 'Live' : 'Not Live';
+                return liveStatus;
+            } catch (error) {
+                throw new Error('Failed to fetch live status from server.'); // 请求失败时返回通用错误信息
+            }
+        }
+
+        function removeErrorMessage() {
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach((errorMessage) => {
+                errorMessage.remove();
             });
-            const data = await response.json();
-            const liveStatus = data.live_status ? 'Live' : 'Not Live';
-            return liveStatus;
+        }
+
+        function removeLiveStatus(youtubeUrl) {
+            const liveStatusContainer = document.getElementById('liveStatusContainer');
+            const liveStatusDivs = liveStatusContainer.querySelectorAll('.live-status-container');
+            liveStatusDivs.forEach((div) => {
+                if (div.innerText.includes(youtubeUrl)) {
+                    div.remove();
+                }
+            });
         }
 
         async function addLiveStatus() {
-            const youtubeUrl = document.getElementById('youtubeUrlInput').value;
-            const liveStatus = await checkLiveStatus(youtubeUrl);
-            const liveStatusContainer = document.getElementById('liveStatusContainer');
-            const newLiveStatusDiv = document.createElement('div');
-            newLiveStatusDiv.classList.add('live-status');
-            newLiveStatusDiv.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
-            liveStatusContainer.appendChild(newLiveStatusDiv);
+            const youtubeUrlInput = document.getElementById('youtubeUrlInput');
+            const youtubeUrl = youtubeUrlInput.value.trim(); // 去除首尾空白
+            if (!youtubeUrl) {
+                alert('YouTube URL cannot be empty.'); // 如果YouTube URL为空，则提示用户
+                return;
+            }
+            try {
+                removeErrorMessage(); // 添加 live status 前移除之前的错误消息
+                const liveStatus = await checkLiveStatus(youtubeUrl);
+                const liveStatusContainer = document.getElementById('liveStatusContainer');
+                const newLiveStatusDiv = document.createElement('div');
+                newLiveStatusDiv.classList.add('live-status-container');
+                const liveStatusContent = document.createElement('div');
+                liveStatusContent.classList.add('live-status');
+                if (liveStatus === 'Live') {
+                    liveStatusContent.classList.add('live-status-success'); // 添加成功状态的样式
+                } else if (liveStatus === 'Not Live' || liveStatus === 'fail') {
+                    liveStatusContent.classList.add('live-status-fail'); // 添加失败状态的样式
+                }
+                liveStatusContent.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
+                newLiveStatusDiv.appendChild(liveStatusContent);
+                const removeButton = document.createElement('span');
+                removeButton.classList.add('remove-url-button');
+                removeButton.innerText = '❌'; // 添加 "X" 图标
+                removeButton.onclick = () => {
+                    removeLiveStatus(youtubeUrl); // 点击 "X" 图标时删除对应的 live status
+                };
+                newLiveStatusDiv.appendChild(removeButton);
+                liveStatusContainer.appendChild(newLiveStatusDiv);
+                youtubeUrlInput.value = ''; // 清空输入框
+            } catch (error) {
+                const errorMessage = document.createElement('div');
+                errorMessage.classList.add('error-message');
+                errorMessage.innerText = error.message;
+                document.body.appendChild(errorMessage);
+            }
         }
-
 
         setInterval(() => {
             const liveStatusDivs = document.querySelectorAll('.live-status');
             liveStatusDivs.forEach(async (div) => {
                 const youtubeUrl = div.innerText.split(' - ')[0].split(': ')[1];
-                const liveStatus = await checkLiveStatus(youtubeUrl);
-                div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
+                try {
+                    const liveStatus = await checkLiveStatus(youtubeUrl);
+                    div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
+                    if (liveStatus === 'Live') {
+                        div.classList.remove('live-status-fail');
+                        div.classList.add('live-status-success');
+                    } else if (liveStatus === 'Not Live' || liveStatus === 'fail') {
+                        div.classList.remove('live-status-success');
+                        div.classList.add('live-status-fail');
+                    }
+                } catch (error) {
+                    div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: fail (Request failed: ${error.message})`;
+                    div.classList.remove('live-status-success');
+                    div.classList.add('live-status-fail');
+                }
             });
-        }, 5 * 60 * 1000); // 5分鐘刷新一次
+        }, 1 * 10 * 1000); // 5分钟刷新一次
     </script>
 </body>
 </html>
