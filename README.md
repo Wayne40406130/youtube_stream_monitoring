@@ -88,8 +88,14 @@ Example:
 }
 ```  
 
-#### 如何使用
-您可以使用不同的方法來調用此 API，例如使用 curl 命令列工具或使用類似 Postman 的工具。以下是使用 curl 的範例：
+#### 如何使用  
+##### 從前端使用
+打開`index.html`，在文字框中輸入直播網址，點選"Add Live Status"  
+若直播正常則Live Status: Live，反之為Not Live  
+可以按紅色X清除掉監控  
+如果server有問題會顯示出來  
+##### 呼叫API
+例如使用 curl 命令列工具或使用類似 Postman 的工具。以下是使用 curl 的範例：
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d "{\"youtube_url\": \"https://www.youtube.com/live/jfKfPfyJRdk?si=G99O-XzZ-tN1M8Kb\"}" http://localhost:8000/api/live/check-live-status/
