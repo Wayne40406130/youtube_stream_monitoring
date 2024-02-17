@@ -60,31 +60,47 @@ python manage.py runserver
 http://localhost:8000/api/live/check-live-status/
 ```
 #### Method
-- POST  
+- GET  
 
-#### Request Body
-請求內容應以 JSON 格式提交，並包含 YouTube網址或影片id。
-
+參數帶`youtube_url:<youtube url>` 或是`youtube_url:<video id>`
 Example:  
-以lofi girl為例
+以lofi girl為例，網址:
 ```json
 {
   "youtube_url": "https://www.youtube.com/live/jfKfPfyJRdk?si=G99O-XzZ-tN1M8Kb"
 }
 ```
 
-#### Response
-如果 YouTube 直播正在進行：
+video id:
 ```json
 {
-  "live_status": true
+  "youtube_url": "jfKfPfyJRdk"
+}
+```
+
+#### Response  
+直播狀態以`live_status`的boolean為主  
+如果 YouTube 直播正在進行：  
+```json
+{
+    "title": "lofi hip hop radio 📚 - beats to relax/study to",
+    "channel_name": "Lofi Girl",
+    "channel_id": "UCSJ4gkVC6NrvII8umztf0Ow",
+    "video_id": "jfKfPfyJRdk",
+    "URL": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+    "live_status": true
 }
 ```  
 
-如果 YouTube 直播未在進行或非直播影片(shorts、影片、直播存檔)：  
+如果 YouTube 直播未在進行或非直播影片(shorts、影片、直播存檔)，以公視直播存檔為例：  
 ```json
 {
-  "live_status": false
+    "title": "新北跨河煙火秀 | #2024跨年煙火 #1314 #新北煙火 #淡水河岸 #八里 (感謝提供:新北市政府)",
+    "channel_name": "公視 網路直播頻道",
+    "channel_id": "UCXgIO9jJVsX5_2ideiSkfvA",
+    "video_id": "l-v8B4GnIWc",
+    "URL": "https://www.youtube.com/watch?v=l-v8B4GnIWc",
+    "live_status": false
 }
 ```  
 
@@ -98,6 +114,6 @@ Example:
 例如使用 curl 命令列工具或使用類似 Postman 的工具。以下是使用 curl 的範例：
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d "{\"youtube_url\": \"https://www.youtube.com/live/jfKfPfyJRdk?si=G99O-XzZ-tN1M8Kb\"}" http://localhost:8000/api/live/check-live-status/
+curl -X GET http://localhost:8000/api/live/check-live-status/?youtube_url=https://www.youtube.com/live/jfKfPfyJRdk?si=G99O-XzZ-tN1M8Kb
 ```
 
