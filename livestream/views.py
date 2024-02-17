@@ -1,21 +1,39 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import YouTubeURLSerializer
 from chat_downloader.sites import YouTubeChatDownloader
 
 
+def extract_video_id(youtube_url):
+    video_id = youtube_url
+    if "watch?v=" in youtube_url:
+        video_id = youtube_url.split("watch?v=")[1]  # 直接從瀏覽器複製網址
+    elif "youtu.be/" in youtube_url:  # 按"Share"時會產生youtu.be/
+        video_id = youtube_url.split("youtu.be/")[1].split("?")[0]
+    elif "/live/" in youtube_url:  # 直播按"Share"時會產生youtube.com/live/<video id>
+        video_id = youtube_url.split("/live/")[1].split("?")[0]
+    return video_id
+
+
 class CheckLiveStatusView(APIView):
-    def post(self, request):
-        serializer = YouTubeURLSerializer(data=request.data)
-        if serializer.is_valid():
-            video_id = serializer.validated_data['youtube_url']
-        else:
-            return Response(serializer.errors, status=400)
+    def get(self, request):
+        youtube_url = request.query_params.get("youtube_url", "")
+        if not youtube_url:
+            return Response({"detail": "YouTube 網址不能為空。"}, status=400)
+
+        video_id = extract_video_id(youtube_url)
         try:
             video_data = YouTubeChatDownloader().get_video_data(video_id)
-            if video_data.get('status') == 'live':
-                return Response({'live_status': True})
-            else:
-                return Response({'live_status': False})
+            if not video_data.get("original_video_id"):
+                return Response({"detail": "YouTube 直播不存在。"}, status=400)
+            video_id = video_data.get("original_video_id")
+            response_data = {
+                "title": video_data.get("title"),
+                "channel_name": video_data.get("author"),
+                "channel_id": video_data.get("author_id"),
+                "video_id": video_id,
+                "URL": f"https://www.youtube.com/watch?v={video_id}",
+                "live_status": video_data.get("status") == "live",
+            }
+            return Response(response_data)
         except Exception as e:
-            return Response({'live_status': False})
+            return Response({"detail": str(e)}, status=500)
