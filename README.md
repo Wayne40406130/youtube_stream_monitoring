@@ -27,14 +27,16 @@ git clone https://github.com/Wayne40406130/youtube_stream_monitoring.git
 ```bash
 cd youtube_stream_monitoring
 ```
-接下來有兩種方式部署系統  
-### Docker  
+接下來有兩種方式部署系統，任選一即可  
+### 1.Docker  
 請確保已經安裝[docker](https://www.docker.com/products/docker-desktop/)  
 1. build image
 在terminal執行以下的指令：  
 `docker build -t docker_youtube_stream_monitoring .`  
+等待執行完成後進入下一步  
 2. 查看images  
 在terminal執行以下的指令： 
+`docker images`  
 確認是否有叫`docker_youtube_stream_monitoring`的image  
 ```bash
 REPOSITORY                         TAG       IMAGE ID       CREATED         SIZE  
@@ -43,7 +45,7 @@ docker_youtube_stream_monitoring   latest    3a92f26d64a2   7 minutes ago   298M
 3. run container  
 在terminal執行以下的指令： 
 `docker run -p 8000:8000 docker_youtube_stream_monitoring`
-### 傳統方式
+### 2.傳統方式
 1. 安裝必要的套件
 
 然後，我們需要安裝專案中所需的 Python 套件。這些套件已經在 `requirements.txt` 檔案中列出。在命令列中輸入以下指令來進行安裝：
@@ -68,7 +70,8 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 
-## 使用說明
+## 使用說明  
+**以下全程預設保持runserver的狀態下**
 ### 文件  
 在瀏覽器輸入`http://127.0.0.1:8000/swagger/`檢視swagger文件  
 輸入`http://127.0.0.1:8000/redoc/`檢視redoc文件
@@ -137,7 +140,26 @@ curl -X GET http://localhost:8000/api/live/check-live-status/?youtube_url=https:
 
 #### 測試
 該專案用了[pytest](https://pytest-django.readthedocs.io/en/latest/tutorial.html) 進行測試  
-**保持runserver的狀態下**在terminal輸入pytest來進行測試  
+1. 若使用的是docker  
+需先在terminal輸入:
+`docker container ls`  
+查看執行中的container id是甚麼，例如:
+```bash
+CONTAINER ID   IMAGE      COMMAND                   CREATED              STATUS
+     PORTS                    NAMES
+015a84306c24   letmetry   "python manage.py ru…"   About a minute ago   Up About a minute   0.0.0.0:8000->8000/tcp   dazzling_goodall
+```
+`015a84306c24`就是該container的id  
+
+接著執行:
+`docker exec -it 015a84306c24 /bin/bash`  
+進入docker shell當中。  
+
+2. 若使用的是一般方法  
+**保持runserver的狀態**  
+
+
+在terminal輸入pytest來進行測試  
 ```bash
 pytest
 ```
