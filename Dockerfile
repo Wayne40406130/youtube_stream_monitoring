@@ -1,8 +1,7 @@
 FROM python:3.10.13-slim
 
-COPY . /
-
-WORKDIR /app
+WORKDIR /youtube_stream_monitoring
+COPY . /youtube_stream_monitoring
 
 RUN pip install -r requirements.txt
 EXPOSE 8000
