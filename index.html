@@ -41,24 +41,18 @@
 
     <script>
         async function checkLiveStatus(youtubeUrl) {
-            try {
-                const response = await fetch('http://localhost:8000/api/live/check-live-status/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ youtube_url: youtubeUrl })
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.detail); // 拋出詳細錯誤信息
+            const response = await fetch(`http://localhost:8000/api/live/check-live-status/?youtube_url=${encodeURIComponent(youtubeUrl)}`);
+            const data = await response.json();
+            if (!response.ok) {
+                if (data.detail === "YouTube 直播不存在。") {
+                    throw new Error(data.detail);
+                } else {
+                    throw new Error('Failed to fetch live status from server.');
                 }
-                const liveStatus = data.live_status ? 'Live' : 'Not Live';
-                return liveStatus;
-            } catch (error) {
-                throw new Error('Failed to fetch live status from server.'); // 請求失敗時返回通用錯誤信息
             }
+            return data;
         }
+
 
         function removeErrorMessage() {
             const errorMessages = document.querySelectorAll('.error-message');
@@ -67,16 +61,32 @@
             });
         }
 
+        function getIdFromYoutubeUrl(url) {
+            const urlParts = url.split('/');
+            let id = null;
+            if (url.includes("watch?v=")) {
+                id = url.split("watch?v=")[1].split("?")[0];
+            } else if (url.includes("youtu.be/")) {
+                id = url.split("youtu.be/")[1].split("?")[0];
+            } else if (url.includes("/live/")) {
+                id = url.split("/live/")[1].split("?")[0];
+            }
+            return id;
+        }
+
         function removeLiveStatus(youtubeUrl) {
             const liveStatusContainer = document.getElementById('liveStatusContainer');
             const liveStatusDivs = liveStatusContainer.querySelectorAll('.live-status-container');
             liveStatusDivs.forEach((div) => {
-                if (div.innerText.includes(youtubeUrl)) {
+                const titleLink = div.querySelector('a');
+                const titleLinkHref = titleLink.href;
+                const idFromUrl = getIdFromYoutubeUrl(titleLinkHref);
+                const idFromInput = getIdFromYoutubeUrl(youtubeUrl);
+                if (idFromUrl === idFromInput) {
                     div.remove();
                 }
             });
         }
-
         async function addLiveStatus() {
             const youtubeUrlInput = document.getElementById('youtubeUrlInput');
             const youtubeUrl = youtubeUrlInput.value.trim(); // 去除首尾空白
@@ -86,19 +96,24 @@
             }
             try {
                 removeErrorMessage();
-                const liveStatus = await checkLiveStatus(youtubeUrl);
+                const data = await checkLiveStatus(youtubeUrl);
                 const liveStatusContainer = document.getElementById('liveStatusContainer');
                 const newLiveStatusDiv = document.createElement('div');
                 newLiveStatusDiv.classList.add('live-status-container');
-                const liveStatusContent = document.createElement('div');
-                liveStatusContent.classList.add('live-status');
-                if (liveStatus === 'Live') {
-                    liveStatusContent.classList.add('live-status-success'); 
-                } else if (liveStatus === 'Not Live' || liveStatus === 'fail') {
-                    liveStatusContent.classList.add('live-status-fail'); 
+                const titleLink = document.createElement('a');
+                titleLink.href = data.URL;
+                titleLink.target = "_blank"; // 在新分頁中打開連結
+                titleLink.textContent = data.title;
+                newLiveStatusDiv.appendChild(titleLink);
+                const liveStatusText = document.createElement('span');
+                liveStatusText.classList.add('live-status');
+                liveStatusText.textContent = ` - Live Status: ${data.live_status ? 'Live' : 'Not Live'}`;
+                if (data.live_status === true) {
+                    liveStatusText.classList.add('live-status-success');
+                } else {
+                    liveStatusText.classList.add('live-status-fail');
                 }
-                liveStatusContent.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
-                newLiveStatusDiv.appendChild(liveStatusContent);
+                newLiveStatusDiv.appendChild(liveStatusText);
                 const removeButton = document.createElement('span');
                 removeButton.classList.add('remove-url-button');
                 removeButton.innerText = '❌'; 
@@ -119,19 +134,19 @@
         setInterval(() => {
             const liveStatusDivs = document.querySelectorAll('.live-status');
             liveStatusDivs.forEach(async (div) => {
-                const youtubeUrl = div.innerText.split(' - ')[0].split(': ')[1];
+                const youtubeUrl = div.previousSibling.href;
                 try {
-                    const liveStatus = await checkLiveStatus(youtubeUrl);
-                    div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: ${liveStatus}`;
-                    if (liveStatus === 'Live') {
+                    const data = await checkLiveStatus(youtubeUrl);
+                    div.textContent = ` - Live Status: ${data.live_status ? 'Live' : 'Not Live'}`;
+                    if (data.live_status === true) {
                         div.classList.remove('live-status-fail');
                         div.classList.add('live-status-success');
-                    } else if (liveStatus === 'Not Live' || liveStatus === 'fail') {
+                    } else {
                         div.classList.remove('live-status-success');
                         div.classList.add('live-status-fail');
                     }
                 } catch (error) {
-                    div.innerText = `YouTube URL: ${youtubeUrl} - Live Status: fail (Request failed: ${error.message})`;
+                    div.textContent = ` - Live Status: fail (Request failed: ${error.message})`;
                     div.classList.remove('live-status-success');
                     div.classList.add('live-status-fail');
                 }
