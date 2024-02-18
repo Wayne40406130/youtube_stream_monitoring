@@ -117,3 +117,24 @@ video id:
 curl -X GET http://localhost:8000/api/live/check-live-status/?youtube_url=https://www.youtube.com/live/jfKfPfyJRdk?si=G99O-XzZ-tN1M8Kb
 ```
 
+#### 測試
+該專案用了[pytest](https://pytest-django.readthedocs.io/en/latest/tutorial.html) 進行測試  
+**保持runserver的狀態下**在terminal輸入pytest來進行測試  
+```bash
+pytest
+```
+另外也可以帶一些參數
+- -s: The -s parameter is just to allow your print statements to write to the console, if you want that, else you can just run pytest.
+- -k <expression>: matches a file, class or function name inside the tests folder that contains the indicated expression.
+- -m <marker>: will run all tests with the inputed marker.
+- -m "not <marker>": will run all tests that don’t have the inputed marker.
+- -x: stops running tests once a test fails, letting us stop the test-run right there so we can go back to debugging our test instead of waiting for the test suite to finish running.
+- --lf: starts running the test suite from the last failed test, perfect to avoid continiously running tests we already know pass when debuggin.
+- -vv: shows a more detailed version of a failed assertion.
+- --cov: show % of tests covered by tests (depends on pytest-cov plugin).
+- --reruns <num_of_reruns>: used for dealing with flaky tests, tests that fail when run in the test suite but pass when run alone.  
+
+for example:
+```bash
+pytest -s -vv -x
+```
