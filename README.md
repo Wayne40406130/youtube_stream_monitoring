@@ -22,13 +22,29 @@
 git clone https://github.com/Wayne40406130/youtube_stream_monitoring.git
 ```
 
-接著，進入到專案的目錄中：
+2. 接著，進入到專案的目錄中：
 
 ```bash
 cd youtube_stream_monitoring
 ```
-
-2. 安裝必要的套件
+接下來有兩種方式部署系統  
+### Docker  
+請確保已經安裝[docker](https://www.docker.com/products/docker-desktop/)  
+1. build image
+在terminal執行以下的指令：  
+`docker build -t docker_youtube_stream_monitoring .`  
+2. 查看images  
+在terminal執行以下的指令： 
+確認是否有叫`docker_youtube_stream_monitoring`的image  
+```bash
+REPOSITORY                         TAG       IMAGE ID       CREATED         SIZE  
+docker_youtube_stream_monitoring   latest    3a92f26d64a2   7 minutes ago   298MB 
+```
+3. run container  
+在terminal執行以下的指令： 
+`docker run -p 8000:8000 docker_youtube_stream_monitoring`
+### 傳統方式
+1. 安裝必要的套件
 
 然後，我們需要安裝專案中所需的 Python 套件。這些套件已經在 `requirements.txt` 檔案中列出。在命令列中輸入以下指令來進行安裝：
 
@@ -36,7 +52,7 @@ cd youtube_stream_monitoring
 pip install -r requirements.txt
 ```
 
-3. 遷移資料庫
+2. 遷移資料庫
 
 在命令列中輸入以下指令來進行遷移：
 
@@ -45,25 +61,23 @@ pip install -r requirements.txt
 ./manage.py migrate
 ```
 
-### 系統服務啟動
+3. 系統服務啟動
 
-當系統建置完成後，我們需要啟動後端和前端的服務。以下是詳細的操作步驟：
-
-#### 後端服務
-請在終端機輸入以下指令以啟動後端服務：
+在終端機輸入以下指令以啟動後端服務：
 ```bash
 python manage.py runserver
 ```
 
-#### 文件  
+## 使用說明
+### 文件  
 在瀏覽器輸入`http://127.0.0.1:8000/swagger/`檢視swagger文件  
 輸入`http://127.0.0.1:8000/redoc/`檢視redoc文件
 
-#### Endpoint  
+### Endpoint  
 ```
 http://localhost:8000/api/live/check-live-status/
 ```
-#### Method
+### Method
 - GET  
 
 參數帶`youtube_url:<youtube url>` 或是`youtube_url:<video id>`
