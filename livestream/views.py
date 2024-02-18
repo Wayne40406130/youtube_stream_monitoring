@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from chat_downloader.sites import YouTubeChatDownloader
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 def extract_video_id(youtube_url):
@@ -15,6 +17,18 @@ def extract_video_id(youtube_url):
 
 
 class CheckLiveStatusView(APIView):
+    @swagger_auto_schema(  # todo need fix wrong example responses, see #4
+        operation_summary="透過輸入直播網址、video_id監控是否正在直播",
+        operation_description="透過輸入直播網址、video_id監控是否正在直播",
+        manual_parameters=[
+            openapi.Parameter(
+                name="youtube_url",
+                in_=openapi.IN_QUERY,
+                description="youtube URL or video_id",
+                type=openapi.TYPE_STRING,
+            )
+        ],
+    )
     def get(self, request):
         youtube_url = request.query_params.get("youtube_url", "")
         if not youtube_url:

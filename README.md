@@ -55,6 +55,10 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 
+#### 文件  
+在瀏覽器輸入`http://127.0.0.1:8000/swagger/`檢視swagger文件  
+輸入`http://127.0.0.1:8000/redoc/`檢視redoc文件
+
 #### Endpoint  
 ```
 http://localhost:8000/api/live/check-live-status/
